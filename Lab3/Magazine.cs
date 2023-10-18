@@ -257,7 +257,15 @@ namespace Lab3
         }
         public void SortByTitle()
         {
-            if (articles != null) articles.Sort();
+            if (articles != null) articles.Sort(new ArticleComparer().CompareTitle);
+        }
+        public void SortByAuthorSurname()
+        {
+            if (articles != null) articles.Sort(new ArticleComparer().CompareAuthorSurname);
+        }
+        public void SortByEstimate()
+        {
+            if (articles != null) articles.Sort(new ArticleComparer().Compare);
         }
     }
 }
