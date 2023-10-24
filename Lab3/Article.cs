@@ -1,5 +1,4 @@
-﻿
-namespace Lab3
+﻿namespace Lab3
 {
     internal class Article : IRateAndCopy, IComparable, IComparer<Article>
     {

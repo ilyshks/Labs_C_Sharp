@@ -36,6 +36,13 @@ namespace Lab3
                 return sum / cnt;
             }
         }
+        public Frequency Frequency
+        {
+            get
+            {
+                return frequency;
+            }
+        }
         public List<Article>? Articles
         {
             get { return articles; }

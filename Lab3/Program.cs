@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Data.SqlTypes;
-
-namespace Lab3
+﻿namespace Lab3
 {
     interface IRateAndCopy
     {
@@ -14,98 +11,110 @@ namespace Lab3
         Monthly,
         Yearly
     }
+    delegate KeyValuePair<TKey, TValue> GenerateElement<TKey, TValue>(int j);
+    delegate TKey KeySelector<TKey>(Magazine mg);
     internal class Program
     {
+        public static string createKey(Magazine mg)
+        {
+            return mg.ToShortString();
+        }
+        public static int inputPositiveInt()
+        {
+            while (true)
+            {
+                try
+                {
+                    int num = int.Parse(Console.ReadLine());
+                    if (num > 0) return num;
+                    throw new FormatException();
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("Введите заново положительное целое число: ");
+                }
+            }
+        }
         static void Main(string[] args)
         {
-            // 1
-            Edition ed1 = new Edition("Инверсия", new DateTime(2004, 3, 5), 1000);
-            Edition ed2 = new Edition("Инверсия", new DateTime(2004, 3, 5), 1000);
-            Console.WriteLine("Равны ли ссылки?\t" + ReferenceEquals(ed1, ed2));
-            Console.WriteLine("Равны ли объекты?\t" + (ed1 == ed2));
-            Console.WriteLine("Значения хеш-кодов: " + ed1.GetHashCode() + "\t" + ed2.GetHashCode() + "\n");
+            Console.WriteLine("========================================================================================================================");
+            Console.WriteLine("Task #1\n");
 
-            // 2
-            try
+            // Создание объекта Magazine и сортировка
+            Person person1 = new Person("Илья", "Горюнов", new DateTime(2004, 4, 5));
+            Person person2 = new Person("Василий", "Сидоров", new DateTime(2004, 10, 6));
+            Person person3 = new Person("Иван", "Иванов", new DateTime(2004, 12, 15));
+
+            Article article1 = new Article(person1, "Статья 1", 4.5);
+            Article article12 = new Article(person1, "Статья 2", 4.6);
+            Article article2 = new Article(person2, "Статья 3", 4);
+            Article article22 = new Article(person2, "Статья 4", 5.0);
+            Article article3 = new Article(person3, "Статья 5", 4.7);
+
+            List<Person> editors = new List<Person> { person1 };
+            List<Article> articles = new List<Article> { article1, article12, article2, article22, article3 };
+
+            Magazine m1 = new Magazine("Журнал 1", Frequency.Weekly, new DateTime(2020, 4, 3), 1000);
+            m1.Editors = editors;
+            m1.Articles = articles;
+
+            Console.WriteLine("Журнал #1:\n" + m1.ToString());
+            Console.WriteLine("========================================================================================================================");
+            m1.SortByTitle();
+            Console.WriteLine("Сортировка по названию статьи:\n" + m1.ToString());
+            Console.WriteLine("========================================================================================================================");
+            m1.SortByAuthorSurname();
+            Console.WriteLine("Сортировка по фамилии автора:\n" + m1.ToString());
+            Console.WriteLine("========================================================================================================================");
+            m1.SortByEstimate();
+            Console.WriteLine("Сортировка по рейтингу статьи:\n" + m1.ToString());
+
+            Console.WriteLine("========================================================================================================================");
+            Console.WriteLine("Task #2\n");
+            KeySelector<String> defineKey = new KeySelector<String>(createKey);
+            MagazineCollection<String> magazineCollection = new MagazineCollection<String>(defineKey);
+
+            Magazine m2 = new Magazine("Журнал 2", Frequency.Monthly, new DateTime(2020, 5, 15), 500);
+            m2.Editors = new List<Person> { person1, person2 };
+            m2.Articles = new List<Article> { article12, article22, article3};
+
+            Magazine m3 = new Magazine("Журнал 3", Frequency.Yearly, new DateTime(2020, 1, 1), 100);
+            m3.Editors = new List<Person> { person1, person3 };
+            m3.Articles = new List<Article> { article1, article12, article3 };
+
+            magazineCollection.AddMagazines(m1, m2, m3);
+            Console.WriteLine("MagazineCollection<string>:");
+            Console.WriteLine(magazineCollection.ToString());
+            Console.WriteLine("========================================================================================================================");
+            
+            Console.WriteLine("Task #3\n");
+            Console.WriteLine("Максимальное значение среднего рейтинга статей: " + magazineCollection.MaxAverageValue);
+
+            Console.WriteLine("\nВыбор журналов с ежемесячной периодичностью выхода:");
+            foreach (var item in magazineCollection.FrequencyGroup(Frequency.Monthly))
             {
-                ed1.Circulation = -23;
+                Console.WriteLine(item.Key);
+                Console.WriteLine();
             }
-            catch (FormatException e)
+            Console.WriteLine("Группировка элементов коллекции по периодичности выхода: ");
+            foreach (var group in magazineCollection.ToGroup)
             {
-                Console.WriteLine(e.Message + "\n");
+                Console.WriteLine(group.Key);
+                Console.WriteLine();
             }
-
-            // 3
-            Magazine magazine = new Magazine("MIET NEWS", Frequency.Weekly, new DateTime(2004, 5, 5), 2345);
-            List<Person> editors = new List<Person>();
-            List<Article> articles = new List<Article>();
-
-            editors.Add(new Person("Сергей", "Петров", new DateTime(1998, 6, 7)));
-            editors.Add(new Person("Иван", "Сидоров", new DateTime(1997, 10, 8)));
-
-            articles.Add(new Article(new Person("Андрей", "Богданов", new DateTime(2001, 2, 12)), "Школа Актива", 4.9));
-            articles.Add(new Article(new Person("Егор", "Зябликов", new DateTime(2001, 3, 15)), "Неделя IT", 5.0));
-            articles.Add(new Article(new Person("Фёдор", "Васильев", new DateTime(2002, 1, 10)), "Ярмарка со вкусом", 4.8));
-
-            magazine.Editors = editors;
-            magazine.Articles = articles;
-
-            Console.WriteLine(magazine);
-
-            // 4
-            Console.WriteLine("Свойство типа Edition:");
-            Console.WriteLine(magazine.EditionProperty);
-
-            // 5
-            Console.WriteLine();
-            Magazine magazine_copy = (Magazine)magazine.DeepCopy();
-            magazine.Articles.Add(new Article(new Person("Пётр", "Сверидов", new DateTime(2000, 3, 4)), "ДоброЦентр", 5.0));
-            Console.WriteLine(magazine_copy);
-            Console.WriteLine(magazine);
-
-            // 6
-            Console.WriteLine("Номер 6");
-            foreach (var item in magazine.GetEnumerator(4.8))
-                Console.WriteLine(item);
-            Console.WriteLine();
-
-            // 7
-            Console.WriteLine("Номер 7");
-            foreach (var item in magazine.GetEnumerator("Ярмарка"))
-                Console.WriteLine(item);
-            Console.WriteLine();
-
-            // 8
-            Console.WriteLine("Номер 8");
-            Console.WriteLine("Статьи, авторы которых не редакторы:");
-            foreach (var item in magazine)
-                Console.WriteLine(item);
-            Console.WriteLine();
-
-            // 9
-            Console.WriteLine("Номер 9");
-            Console.WriteLine("Статьи, авторы которых и редакторы одновременно:");
-            int cnt = 0;
-            foreach (var item in magazine.GetAuthorsAndEditors())
-            {
-                Console.WriteLine(item);
-                cnt++;
-            }
-            if (cnt == 0) Console.WriteLine("Таких нет!");
-            Console.WriteLine();
-
-            // 10
-            Console.WriteLine("Номер 10");
-            Console.WriteLine("Только редакторы:");
-            cnt = 0;
-            foreach (var item in magazine.GetOnlyEditors())
-            {
-                Console.WriteLine(item);
-                cnt++;
-            }
-            if (cnt == 0) Console.WriteLine("Таких нет!");
-            Console.WriteLine();
-
+            Console.WriteLine("========================================================================================================================");
+            
+            Console.WriteLine("Task #4\n");
+            Console.WriteLine("Тестируем поиск элементов в коллекциях.");
+            Console.Write("Введите кол-во элементов: ");
+            int size = inputPositiveInt();
+            TestCollections<Edition, Magazine> testCollections = new TestCollections<Edition, Magazine>(size, TestCollections<Edition, Magazine>.GenerateElement);
+            testCollections.searchListOfTKeys();
+            testCollections.searchListOfString();
+            testCollections.searchKeyInDictOfTKeys();
+            testCollections.searchKeyInDictOfString();
+            testCollections.searchValueInDictOfTKeys();
+            testCollections.searchValueInDictOfString();
         }
     }
 }
